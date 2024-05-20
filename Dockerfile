@@ -6,4 +6,5 @@ ENV JAR_FILE=demo4-0.0.1.jar
 WORKDIR /opt/portal
 ADD libs libs
 COPY build/libs/${JAR_FILE} ${JAR_FILE}
+ENV LD_PRELOAD=/opt/portal/libs/linux/libcad.so
 ENTRYPOINT java -jar ${JAR_FILE}
