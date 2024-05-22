@@ -27,7 +27,7 @@ public class CadService {
 
         List<CadLayerDto> layers = getLayerList(cadImage);
 
-        for (int i = 0; i < 10000; i++) {
+        for (int i = 0; i < 1000; i++) {
             imageBlocks(cadImage, cadLib, layers);
             sleep();
         }
