@@ -42,7 +42,7 @@ public interface CadLib extends Library {
                 put(Library.OPTION_STRING_ENCODING, "UTF-8");
             }
         };
-        return Native.load("libcad.so", CadLib.class, options);
+        return Native.load("/opt/portal/libs/linux/libcad.so", CadLib.class, options);
     }
 
     private static CadLib cadLibWindowsLoad() {
