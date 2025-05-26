@@ -7,6 +7,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 import java.io.File;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -15,50 +16,57 @@ public class CadService {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(CadService.class);
 
-    private static final ExecutorService executor = Executors.newCachedThreadPool();
+     private static final ExecutorService createPool = Executors.newFixedThreadPool(10);
+     private static final ExecutorService closePool = Executors.newFixedThreadPool(10);
 
     public static void testCad() {
-        CadLib cadLib = CadLib.INSTANCE;
-        for (int i = 0; i < 50; i++) {
-            createImageAsync();
-            sleep();
+        run_memery_leak(10);
+        // run_memery_clean(3);
+    }
+
+    private static void run_memery_leak(int num) {
+        if (num > 0) {
+            CompletableFuture.runAsync(() -> {
+                Pointer cadImage = createImage(num);
+                CompletableFuture.runAsync(() -> {
+                    closeImage(cadImage, num);
+                }, closePool);
+                sleep();
+                run_memery_leak(num - 1);
+            }, createPool);
+        }
+    }
+
+    private static void run_memery_clean(int num) {
+        if (num > 0) {
+            CompletableFuture.runAsync(() -> {
+                Pointer cadImage = createImage(num);
+                closeImage(cadImage, num);
+                sleep();
+                run_memery_clean(num - 1);
+            }, createPool);
         }
     }
 
     private static void sleep() {
         try {
-            Thread.sleep(5_000);
+            Thread.sleep(1_000);
         } catch (InterruptedException ie) {
             Thread.currentThread().interrupt();
         }
     }
 
-    private static Pointer createImage() {
+    private static Pointer createImage(int num) {
         File file = new File("/opt/portal/libs/big.dwg");;
         CadLib cadLib = CadLib.INSTANCE;
         Pointer cadImage = cadLib.CreateCAD(null, file.getAbsolutePath());
-        cadLib.SetCADBorderType(cadImage, 0);
-        cadLib.SetCADBorderSize(cadImage, 0);
-        LOGGER.info("CAD image create async");
+        LOGGER.info("create image async {}", num);
         return cadImage;
     }
 
-    private static void closeImage(Pointer cadImage) {
+    private static void closeImage(Pointer cadImage, int num) {
         CadLib cadLib = CadLib.INSTANCE;
         cadLib.CloseCAD(cadImage);
-    }
-
-    private static void createImageAsync() {
-        executor.execute(() -> {
-            Pointer cadImage = createImage();
-            closeImageAsync(cadImage);
-        });
-    }
-
-    private static void closeImageAsync(Pointer cadImage) {
-        executor.execute(() -> {
-            CadLib.INSTANCE.CADClose(cadImage);
-            LOGGER.info("CAD image closed");
-        });
+        LOGGER.info("closed image async {}", num);
     }
 }
