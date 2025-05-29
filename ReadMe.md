@@ -3,10 +3,5 @@
 ```
 
 ```bash
-docker build -t cad/cad:0.1 .
+./gradlew test --no-daemon
 ```
-
-```bash
-docker run -i -t cad/cad:0.1
-```
-
